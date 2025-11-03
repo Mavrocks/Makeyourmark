@@ -1,0 +1,1021 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Make Your Mark V11.5</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Poppins:wght@600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet.draw/1.0.4/leaflet.draw.css" integrity="sha512-gCkG3K+BbTK1Z4VBPakiobP6KyHR+Y6z+4PSJVpaz6RtWLpmjHtkobaN6D+PfYZ7RUTpujISiFDUFxIr05oigw==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+  <style>
+    :root {
+      color-scheme: light;
+      font-size: 16px;
+      --accent: #e76f51;
+      --bg-panel: #ffffffef;
+      --border-radius: 10px;
+    }
+    * {
+      box-sizing: border-box;
+    }
+    body {
+      margin: 0;
+      font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: #f4f4f4;
+      color: #1f2933;
+      display: flex;
+      min-height: 100vh;
+    }
+    h1, h2, h3 {
+      font-family: 'Poppins', 'Inter', sans-serif;
+      margin: 0 0 0.75rem;
+      color: #1a1a1a;
+    }
+    #app {
+      display: flex;
+      width: 100%;
+    }
+    aside {
+      width: 360px;
+      max-width: 100%;
+      background: var(--bg-panel);
+      padding: 1.5rem;
+      overflow-y: auto;
+      box-shadow: 4px 0 20px rgba(0, 0, 0, 0.08);
+      position: relative;
+      z-index: 500;
+    }
+    #map {
+      flex: 1;
+      height: 100vh;
+    }
+    header {
+      margin-bottom: 1.5rem;
+    }
+    header h1 {
+      font-size: 1.6rem;
+    }
+    .status-bar {
+      background: #fef6f4;
+      border: 1px solid rgba(231, 111, 81, 0.25);
+      border-radius: var(--border-radius);
+      padding: 0.75rem;
+      margin-bottom: 1rem;
+      display: flex;
+      justify-content: space-between;
+      gap: 0.5rem;
+      font-weight: 600;
+      color: #4a4a4a;
+    }
+    section {
+      margin-bottom: 1.75rem;
+    }
+    section h2 {
+      font-size: 1.1rem;
+      margin-bottom: 0.75rem;
+    }
+    .chip-grid {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      margin-bottom: 1rem;
+    }
+    .chip {
+      padding: 0.45rem 0.75rem;
+      border-radius: 999px;
+      border: 1px solid rgba(0,0,0,0.1);
+      background: #fff;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      cursor: pointer;
+      font-size: 0.85rem;
+      transition: transform 0.15s ease, box-shadow 0.15s ease;
+    }
+    .chip-color {
+      width: 14px;
+      height: 14px;
+      border-radius: 50%;
+    }
+    .chip.active {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 1px rgba(231, 111, 81, 0.4);
+      transform: translateY(-1px);
+    }
+    .controls-row {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 0.5rem;
+      margin-bottom: 0.75rem;
+    }
+    .control-button {
+      padding: 0.6rem 0.75rem;
+      border-radius: 8px;
+      border: 1px solid rgba(0,0,0,0.1);
+      background: #fff;
+      font-weight: 500;
+      cursor: pointer;
+      transition: background 0.2s ease, color 0.2s ease, opacity 0.2s ease;
+    }
+    .control-button:disabled {
+      cursor: not-allowed;
+      opacity: 0.45;
+    }
+    .control-button.subtle {
+      font-size: 0.85rem;
+      color: #4b5563;
+      background: #f9fafb;
+    }
+    .control-button.danger {
+      color: #d32f2f;
+      border-color: rgba(211, 47, 47, 0.25);
+    }
+    .control-button:hover:not(:disabled) {
+      background: rgba(231, 111, 81, 0.08);
+    }
+    .field {
+      margin-bottom: 0.75rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.35rem;
+    }
+    .field label {
+      font-weight: 600;
+      font-size: 0.85rem;
+      color: #374151;
+    }
+    .field input[type="number"],
+    .field select {
+      padding: 0.55rem 0.6rem;
+      border-radius: 8px;
+      border: 1px solid rgba(0,0,0,0.12);
+      font-size: 0.9rem;
+      background: #fff;
+      font-family: 'Inter', sans-serif;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.85rem;
+    }
+    th, td {
+      text-align: left;
+      padding: 0.4rem 0.35rem;
+      border-bottom: 1px solid rgba(0,0,0,0.05);
+    }
+    th {
+      font-weight: 600;
+      color: #374151;
+    }
+    tbody tr:last-child td {
+      border-bottom: none;
+    }
+    .analysis-section {
+      background: rgba(255, 255, 255, 0.65);
+      border-radius: var(--border-radius);
+      padding: 0.9rem;
+      box-shadow: inset 0 0 0 1px rgba(0,0,0,0.05);
+    }
+    canvas {
+      max-width: 100%;
+    }
+    .export-buttons {
+      display: flex;
+      flex-direction: column;
+      gap: 0.6rem;
+    }
+    .alert {
+      position: fixed;
+      top: 1rem;
+      right: 1rem;
+      background: #ffffff;
+      border-left: 4px solid var(--accent);
+      padding: 0.75rem 1rem;
+      border-radius: 8px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.12);
+      font-weight: 600;
+      color: #1f2933;
+      display: none;
+      z-index: 1000;
+    }
+    .alert.show {
+      display: block;
+    }
+    .status-bar span {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
+    }
+    .status-bar strong {
+      color: var(--accent);
+    }
+    .leaflet-draw-toolbar-top {
+      top: 90px;
+    }
+    .leaflet-container {
+      font-family: 'Inter', sans-serif;
+    }
+    .legend-note {
+      font-size: 0.75rem;
+      color: #6b7280;
+    }
+    .chart-container {
+      margin-top: 1rem;
+      background: #fff;
+      border-radius: var(--border-radius);
+      padding: 0.75rem;
+      box-shadow: inset 0 0 0 1px rgba(0,0,0,0.05);
+    }
+    @media (max-width: 900px) {
+      body {
+        flex-direction: column;
+      }
+      aside {
+        width: 100%;
+        height: 45vh;
+        order: 2;
+      }
+      #map {
+        order: 1;
+        height: 55vh;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div id="app">
+    <aside>
+      <header>
+        <h1>Make Your Mark V11.5</h1>
+        <p class="legend-note">Sketch proposals, assess capacity, and export your plan.</p>
+      </header>
+      <div class="status-bar">
+        <span>Total area <strong id="total-area">0.00 ha</strong></span>
+        <span>Total dwellings <strong id="total-dwellings">0</strong></span>
+      </div>
+      <section>
+        <h2>Draw Proposals</h2>
+        <div class="chip-grid" id="land-chips"></div>
+        <div class="chip-grid" id="road-chips"></div>
+        <div class="controls-row">
+          <button class="control-button" id="delete-selected" disabled>Delete Selected</button>
+          <button class="control-button danger" id="delete-all">Delete All</button>
+        </div>
+        <div class="controls-row">
+          <button class="control-button subtle" id="undo-btn" disabled>↩ Undo</button>
+          <button class="control-button subtle" id="redo-btn" disabled>Redo ↪</button>
+        </div>
+        <div class="field">
+          <label for="road-radii">Road Radii</label>
+          <select id="road-radii">
+            <option value="none">None</option>
+            <option value="gentle">Gentle</option>
+            <option value="medium">Medium</option>
+            <option value="strong">Strong</option>
+          </select>
+        </div>
+      </section>
+      <section>
+        <h2>Density Settings (dph)</h2>
+        <div class="field">
+          <label for="density-low">Residential – Low</label>
+          <input type="number" id="density-low" value="30" min="0" />
+        </div>
+        <div class="field">
+          <label for="density-medium">Residential – Medium</label>
+          <input type="number" id="density-medium" value="45" min="0" />
+        </div>
+        <div class="field">
+          <label for="density-high">Residential – High</label>
+          <input type="number" id="density-high" value="65" min="0" />
+        </div>
+      </section>
+      <section>
+        <h2>Analysis</h2>
+        <div class="analysis-section">
+          <h3>Area by type</h3>
+          <table>
+            <thead>
+              <tr><th>Type</th><th>Area (ha)</th></tr>
+            </thead>
+            <tbody id="area-table"></tbody>
+          </table>
+          <h3 style="margin-top:1rem;">Housing capacity</h3>
+          <table>
+            <thead>
+              <tr><th>Residential polygon</th><th>Area (ha)</th><th>Dwellings</th></tr>
+            </thead>
+            <tbody id="capacity-table"></tbody>
+          </table>
+          <div class="chart-container">
+            <canvas id="area-chart" height="200"></canvas>
+          </div>
+          <button class="control-button" id="export-csv" style="margin-top:1rem;">Export CSV</button>
+        </div>
+      </section>
+      <section>
+        <h2>Data</h2>
+        <div class="export-buttons">
+          <button class="control-button" id="export-geojson">Export GeoJSON</button>
+          <label class="control-button" for="import-geojson" style="text-align:center; cursor:pointer;">
+            Import GeoJSON
+            <input type="file" id="import-geojson" accept="application/geo+json,application/json,.geojson" style="display:none;" />
+          </label>
+          <label class="control-button" for="import-boundary" style="text-align:center; cursor:pointer;">
+            Import Site Boundary
+            <input type="file" id="import-boundary" accept="application/geo+json,application/json,.geojson" style="display:none;" />
+          </label>
+        </div>
+      </section>
+    </aside>
+    <div id="map"></div>
+  </div>
+  <div class="alert" id="alert"></div>
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet.draw/1.0.4/leaflet.draw.js" integrity="sha512-gU+b/gd2cA1BmDBlkm4ju9F4gIXAAKnUtTYW8Mq31bV3lbAFrrAIekep3MyxBCfVxAo1/jv75wx9Tz5T4EdVxw==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Turf.js/6.5.0/turf.min.js" integrity="sha512-s8cf2lNF/s2L03KcS70AIyMSK03iYf6A4qvhDbG+n+EM2pIvFvlNew7m6yOD87mpy4V/mQJu1nvLKknj1WFJsA==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js" integrity="sha256-5zmiEJeZVrDCTnhgypKekJy5o+1OtSWT8gJtIhXCTZQ=" crossorigin="anonymous"></script>
+  <script>
+    const landUseTypes = {
+      residential_low: { label: 'Residential – Low', color: '#FFE082' },
+      residential_medium: { label: 'Residential – Medium', color: '#FFC107' },
+      residential_high: { label: 'Residential – High', color: '#FFB300' },
+      mixed: { label: 'Mixed-use', color: '#D65A31' },
+      employment: { label: 'Employment', color: '#7B61FF' },
+      education: { label: 'Education', color: '#00C2D1' },
+      open: { label: 'Open space', color: '#90BE6D' },
+      centre: { label: 'Local centre', color: '#E63946' },
+      corridor: { label: 'Green/Blue corridor', color: '#2A9D8F' }
+    };
+    const roadTypes = {
+      primary: { label: 'Primary road', color: '#E76F51', weight: 6 },
+      secondary: { label: 'Secondary road', color: '#264653', weight: 5 }
+    };
+    const densityInputs = {
+      residential_low: document.getElementById('density-low'),
+      residential_medium: document.getElementById('density-medium'),
+      residential_high: document.getElementById('density-high')
+    };
+    let densitySettings = {
+      residential_low: 30,
+      residential_medium: 45,
+      residential_high: 65
+    };
+
+    const statusAreaEl = document.getElementById('total-area');
+    const statusDwellingsEl = document.getElementById('total-dwellings');
+    const areaTableBody = document.getElementById('area-table');
+    const capacityTableBody = document.getElementById('capacity-table');
+
+    let latestTotals = { areaHa: 0, dwellings: 0 };
+
+    const alertBox = document.getElementById('alert');
+
+    const map = L.map('map', {
+      zoomControl: false
+    }).setView([51.5072, -0.1276], 13);
+
+    const baseLayers = {
+      'OSM Standard': L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        maxZoom: 19,
+        attribution: '&copy; OpenStreetMap contributors'
+      }),
+      'Carto Light': L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
+        maxZoom: 19,
+        attribution: '&copy; OpenStreetMap, &copy; Carto'
+      }),
+      'Esri World Imagery': L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+        maxZoom: 19,
+        attribution: 'Tiles &copy; Esri'
+      })
+    };
+    baseLayers['OSM Standard'].addTo(map);
+    L.control.layers(baseLayers, null, { position: 'topleft' }).addTo(map);
+    L.control.zoom({ position: 'topleft' }).addTo(map);
+
+    const proposalGroup = L.featureGroup();
+    const landGroup = L.featureGroup().addTo(map);
+    const roadGroup = L.featureGroup().addTo(map);
+    const boundaryGroup = L.featureGroup().addTo(map);
+
+    const editControl = new L.Control.Draw({
+      draw: false,
+      edit: {
+        featureGroup: proposalGroup,
+        remove: false
+      }
+    });
+    map.addControl(editControl);
+
+    const drawOptions = {
+      polygon: new L.Draw.Polygon(map, {
+        showArea: false,
+        shapeOptions: {
+          color: '#555',
+          weight: 2,
+          fillOpacity: 0.6
+        }
+      }),
+      polyline: new L.Draw.Polyline(map, {
+        shapeOptions: {
+          color: '#E76F51',
+          weight: 5
+        }
+      })
+    };
+
+    let currentSubtype = null;
+    let currentCategory = null;
+    let selectedLayer = null;
+    let currentRoadRadii = 'none';
+
+    let history = [];
+    let historyIndex = -1;
+    let suppressHistory = false;
+
+    function showAlert(message) {
+      alertBox.textContent = message;
+      alertBox.classList.add('show');
+      setTimeout(() => alertBox.classList.remove('show'), 3000);
+    }
+
+    function formatNumber(num, decimals = 2) {
+      return Number(num).toLocaleString(undefined, { minimumFractionDigits: decimals, maximumFractionDigits: decimals });
+    }
+
+    function createChip(container, key, data, category) {
+      const chip = document.createElement('button');
+      chip.className = 'chip';
+      chip.type = 'button';
+      chip.dataset.key = key;
+      chip.dataset.category = category;
+      chip.innerHTML = `<span class="chip-color" style="background:${data.color};"></span>${data.label}`;
+      chip.addEventListener('click', () => {
+        document.querySelectorAll(`.chip[data-category="${category}"]`).forEach(c => c.classList.remove('active'));
+        chip.classList.add('active');
+        currentSubtype = key;
+        currentCategory = category;
+        if (category === 'land') {
+          startPolygonDraw();
+        } else {
+          startPolylineDraw();
+        }
+      });
+      container.appendChild(chip);
+    }
+
+    const landChips = document.getElementById('land-chips');
+    Object.entries(landUseTypes).forEach(([key, data]) => createChip(landChips, key, data, 'land'));
+
+    const roadChips = document.getElementById('road-chips');
+    Object.entries(roadTypes).forEach(([key, data]) => createChip(roadChips, key, data, 'road'));
+
+    function startPolygonDraw() {
+      if (!currentSubtype) return;
+      drawOptions.polyline.disable();
+      drawOptions.polygon.enable();
+    }
+    function startPolylineDraw() {
+      if (!currentSubtype) return;
+      drawOptions.polygon.disable();
+      drawOptions.polyline.enable();
+    }
+
+    map.on(L.Draw.Event.DRAWSTART, () => {
+      clearSelection();
+    });
+
+    map.on(L.Draw.Event.CREATED, (event) => {
+      const layer = event.layer;
+      if (!currentSubtype) return;
+      if (currentCategory === 'land') {
+        styleLandLayer(layer, currentSubtype);
+        setLayerProperties(layer, 'land', currentSubtype);
+        landGroup.addLayer(layer);
+        proposalGroup.addLayer(layer);
+      } else if (currentCategory === 'road') {
+        const radii = currentRoadRadii;
+        styleRoadLayer(layer, currentSubtype, radii);
+        setLayerProperties(layer, 'road', currentSubtype, radii);
+        layer._controlLatLngs = cloneLatLngs(layer.getLatLngs());
+        roadGroup.addLayer(layer);
+        proposalGroup.addLayer(layer);
+        applyRoadSmoothing(layer);
+      }
+      attachLayerEvents(layer);
+      saveHistory();
+      updateAnalysis();
+      drawOptions.polygon.disable();
+      drawOptions.polyline.disable();
+    });
+
+    map.on(L.Draw.Event.EDITSTART, () => {
+      proposalGroup.eachLayer(layer => {
+        if (layer.feature?.properties?.category === 'road') {
+          if (layer._controlLatLngs) {
+            layer.setLatLngs(layer._controlLatLngs);
+          } else {
+            layer._controlLatLngs = cloneLatLngs(layer.getLatLngs());
+          }
+        }
+      });
+      updateSelectionHighlight();
+    });
+
+    map.on(L.Draw.Event.EDITED, (event) => {
+      event.layers.eachLayer(layer => {
+        if (layer.feature?.properties?.category === 'road') {
+          layer._controlLatLngs = cloneLatLngs(layer.getLatLngs());
+          applyRoadSmoothing(layer);
+        } else {
+          if (layer instanceof L.Polygon) {
+            // ensure polygon style maintained
+            styleLandLayer(layer, layer.feature.properties.subtype);
+          }
+        }
+      });
+      updateSelectionHighlight();
+      updateAnalysis();
+      saveHistory();
+    });
+
+    function styleLandLayer(layer, subtype) {
+      const style = landUseTypes[subtype];
+      layer.setStyle({
+        color: selectedLayer === layer ? '#E76F51' : '#424242',
+        weight: selectedLayer === layer ? 3 : 1.5,
+        fillColor: style.color,
+        fillOpacity: 0.65
+      });
+    }
+
+    function styleRoadLayer(layer, subtype, radii) {
+      const style = roadTypes[subtype];
+      const isSelected = selectedLayer === layer;
+      layer.setStyle({
+        color: isSelected ? '#E76F51' : style.color,
+        weight: style.weight + (isSelected ? 1 : 0),
+        opacity: isSelected ? 1 : 0.85,
+        lineCap: 'round',
+        lineJoin: 'round',
+        dashArray: isSelected ? '6,6' : null
+      });
+      layer._roadRadii = radii || 'none';
+    }
+
+    function setLayerProperties(layer, category, subtype, radii) {
+      layer.feature = layer.feature || { type: 'Feature', properties: {} };
+      const properties = { category, subtype };
+      if (category === 'road') {
+        properties.radii = radii || 'none';
+      }
+      layer.feature.properties = properties;
+    }
+
+    function attachLayerEvents(layer) {
+      layer.on('click', (e) => {
+        L.DomEvent.stopPropagation(e);
+        setSelectedLayer(layer);
+      });
+      if (layer instanceof L.Polyline && !(layer instanceof L.Polygon)) {
+        if (!layer._controlLatLngs) {
+          layer._controlLatLngs = cloneLatLngs(layer.getLatLngs());
+        }
+      }
+    }
+
+    map.on('click', () => {
+      clearSelection();
+    });
+
+    function setSelectedLayer(layer) {
+      if (selectedLayer === layer) return;
+      clearSelection();
+      selectedLayer = layer;
+      updateSelectionHighlight();
+      document.getElementById('delete-selected').disabled = false;
+      if (layer.feature?.properties?.category === 'road') {
+        document.getElementById('road-radii').value = layer._roadRadii || 'none';
+      }
+    }
+
+    function clearSelection() {
+      if (selectedLayer) {
+        const layer = selectedLayer;
+        const category = layer.feature?.properties?.category;
+        selectedLayer = null;
+        if (category === 'land') {
+          styleLandLayer(layer, layer.feature.properties.subtype);
+        } else if (category === 'road') {
+          styleRoadLayer(layer, layer.feature.properties.subtype, layer._roadRadii);
+        } else if (category === 'boundary') {
+          layer.setStyle({ color: '#D32F2F', weight: 2, fillOpacity: 0 });
+        }
+      } else {
+        selectedLayer = null;
+      }
+      document.getElementById('delete-selected').disabled = true;
+    }
+
+    function updateSelectionHighlight() {
+      landGroup.eachLayer(layer => {
+        styleLandLayer(layer, layer.feature.properties.subtype);
+      });
+      roadGroup.eachLayer(layer => {
+        styleRoadLayer(layer, layer.feature.properties.subtype, layer._roadRadii);
+        if (layer === selectedLayer) {
+          layer.bringToFront();
+        }
+      });
+      boundaryGroup.eachLayer(layer => {
+        if (layer === selectedLayer) {
+          layer.setStyle({ color: '#E76F51', weight: 3, fillOpacity: 0 });
+        } else {
+          layer.setStyle({ color: '#D32F2F', weight: 2, fillOpacity: 0 });
+        }
+      });
+    }
+
+    document.getElementById('delete-selected').addEventListener('click', () => {
+      if (!selectedLayer) return;
+      const category = selectedLayer.feature?.properties?.category;
+      if (category === 'land') {
+        landGroup.removeLayer(selectedLayer);
+        proposalGroup.removeLayer(selectedLayer);
+      } else if (category === 'road') {
+        roadGroup.removeLayer(selectedLayer);
+        proposalGroup.removeLayer(selectedLayer);
+      } else if (category === 'boundary') {
+        boundaryGroup.removeLayer(selectedLayer);
+      }
+      selectedLayer = null;
+      document.getElementById('delete-selected').disabled = true;
+      updateSelectionHighlight();
+      updateAnalysis();
+      saveHistory();
+    });
+
+    document.getElementById('delete-all').addEventListener('click', () => {
+      if (!confirm('Clear all proposals? This cannot be undone.')) return;
+      landGroup.clearLayers();
+      roadGroup.clearLayers();
+      proposalGroup.clearLayers();
+      clearSelection();
+      updateAnalysis();
+      saveHistory();
+    });
+
+    document.getElementById('road-radii').addEventListener('change', (e) => {
+      currentRoadRadii = e.target.value;
+      if (selectedLayer && selectedLayer.feature?.properties?.category === 'road') {
+        selectedLayer._roadRadii = currentRoadRadii;
+        selectedLayer.feature.properties.radii = currentRoadRadii;
+        applyRoadSmoothing(selectedLayer);
+        updateSelectionHighlight();
+        saveHistory();
+      }
+    });
+
+    Object.entries(densityInputs).forEach(([key, input]) => {
+      input.addEventListener('input', () => {
+        const value = parseFloat(input.value);
+        densitySettings[key] = isNaN(value) ? 0 : value;
+        updateAnalysis();
+      });
+    });
+
+    function cloneLatLngs(latlngs) {
+      if (Array.isArray(latlngs) && latlngs.length && Array.isArray(latlngs[0])) {
+        return latlngs.map(ll => cloneLatLngs(ll));
+      }
+      return latlngs.map(ll => L.latLng(ll.lat, ll.lng));
+    }
+
+    function applyRoadSmoothing(layer) {
+      const strengthMap = { none: 0, gentle: 0.2, medium: 0.4, strong: 0.6 };
+      const strength = strengthMap[layer._roadRadii || 'none'];
+      if (!strength) {
+        if (layer._controlLatLngs) {
+          layer.setLatLngs(cloneLatLngs(layer._controlLatLngs));
+        }
+        return;
+      }
+      const points = layer._controlLatLngs ? cloneLatLngs(layer._controlLatLngs) : cloneLatLngs(layer.getLatLngs());
+      const smoothed = smoothLatLngs(points, strength);
+      layer.setLatLngs(smoothed);
+    }
+
+    function smoothLatLngs(latlngs, strength) {
+      if (!Array.isArray(latlngs) || latlngs.length < 3) return latlngs;
+      const result = latlngs.map((pt, idx) => {
+        if (idx === 0 || idx === latlngs.length - 1) {
+          return L.latLng(pt.lat, pt.lng);
+        }
+        const prev = latlngs[idx - 1];
+        const next = latlngs[idx + 1];
+        const lat = pt.lat + strength * ((prev.lat + next.lat) / 2 - pt.lat);
+        const lng = pt.lng + strength * ((prev.lng + next.lng) / 2 - pt.lng);
+        return L.latLng(lat, lng);
+      });
+      return result;
+    }
+
+    function updateAnalysis() {
+      const areaByType = {};
+      const capacityRows = [];
+      let totalAreaHa = 0;
+      let totalDwellings = 0;
+
+      landGroup.eachLayer(layer => {
+        const subtype = layer.feature?.properties?.subtype;
+        if (!subtype) return;
+        const area = turf.area(layer.toGeoJSON());
+        const areaHa = area / 10000;
+        totalAreaHa += areaHa;
+        areaByType[subtype] = (areaByType[subtype] || 0) + areaHa;
+        if (subtype.startsWith('residential')) {
+          const dph = densitySettings[subtype] || 0;
+          const dwellings = areaHa * dph;
+          totalDwellings += dwellings;
+          capacityRows.push({ label: landUseTypes[subtype].label, areaHa, dwellings });
+        }
+      });
+
+      statusAreaEl.textContent = `${formatNumber(totalAreaHa)} ha`;
+      statusDwellingsEl.textContent = Math.round(totalDwellings).toLocaleString();
+      latestTotals = { areaHa: totalAreaHa, dwellings: totalDwellings };
+
+      areaTableBody.innerHTML = '';
+      Object.keys(landUseTypes).forEach(key => {
+        if (areaByType[key]) {
+          const row = document.createElement('tr');
+          row.innerHTML = `<td>${landUseTypes[key].label}</td><td>${formatNumber(areaByType[key])}</td>`;
+          areaTableBody.appendChild(row);
+        }
+      });
+      if (!areaTableBody.children.length) {
+        const row = document.createElement('tr');
+        row.innerHTML = '<td colspan="2">No land-use polygons yet.</td>';
+        areaTableBody.appendChild(row);
+      }
+
+      capacityTableBody.innerHTML = '';
+      if (capacityRows.length === 0) {
+        const row = document.createElement('tr');
+        row.innerHTML = '<td colspan="3">No residential polygons.</td>';
+        capacityTableBody.appendChild(row);
+      } else {
+        capacityRows.forEach((entry, idx) => {
+          const row = document.createElement('tr');
+          row.innerHTML = `<td>${entry.label} ${idx + 1}</td><td>${formatNumber(entry.areaHa)}</td><td>${Math.round(entry.dwellings).toLocaleString()}</td>`;
+          capacityTableBody.appendChild(row);
+        });
+        const totalRow = document.createElement('tr');
+        totalRow.innerHTML = `<td><strong>Total</strong></td><td><strong>${formatNumber(capacityRows.reduce((sum, r) => sum + r.areaHa, 0))}</strong></td><td><strong>${Math.round(totalDwellings).toLocaleString()}</strong></td>`;
+        capacityTableBody.appendChild(totalRow);
+      }
+
+      updateChart(areaByType);
+    }
+
+    let areaChart = null;
+    function updateChart(areaByType) {
+      const labels = [];
+      const data = [];
+      const colors = [];
+      Object.keys(landUseTypes).forEach(key => {
+        if (areaByType[key]) {
+          labels.push(landUseTypes[key].label);
+          data.push(Number(areaByType[key].toFixed(3)));
+          colors.push(landUseTypes[key].color);
+        }
+      });
+      if (!areaChart) {
+        const ctx = document.getElementById('area-chart');
+        areaChart = new Chart(ctx, {
+          type: 'bar',
+          data: {
+            labels,
+            datasets: [{
+              label: 'Area (ha)',
+              data,
+              backgroundColor: colors
+            }]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+              x: {
+                ticks: { color: '#374151', font: { family: 'Inter' } }
+              },
+              y: {
+                ticks: { color: '#4b5563', font: { family: 'Inter' } }
+              }
+            },
+            plugins: {
+              legend: { display: false }
+            }
+          }
+        });
+      } else {
+        areaChart.data.labels = labels;
+        areaChart.data.datasets[0].data = data;
+        areaChart.data.datasets[0].backgroundColor = colors;
+        areaChart.update();
+      }
+    }
+
+    function saveHistory() {
+      if (suppressHistory) return;
+      const state = JSON.stringify(proposalGroup.toGeoJSON());
+      if (historyIndex >= 0 && history[historyIndex] === state) {
+        return;
+      }
+      history = history.slice(0, historyIndex + 1);
+      history.push(state);
+      historyIndex = history.length - 1;
+      updateHistoryButtons();
+    }
+
+    function loadState(stateString) {
+      suppressHistory = true;
+      landGroup.clearLayers();
+      roadGroup.clearLayers();
+      proposalGroup.clearLayers();
+      const geojson = JSON.parse(stateString);
+      L.geoJSON(geojson, {
+        onEachFeature: (feature, layer) => {
+          const { category, subtype, radii } = feature.properties || {};
+          if (category === 'land') {
+            styleLandLayer(layer, subtype);
+            layer.feature = feature;
+            landGroup.addLayer(layer);
+            proposalGroup.addLayer(layer);
+          } else if (category === 'road') {
+            styleRoadLayer(layer, subtype, radii);
+            layer.feature = feature;
+            layer._roadRadii = radii || 'none';
+            layer._controlLatLngs = cloneLatLngs(layer.getLatLngs());
+            applyRoadSmoothing(layer);
+            roadGroup.addLayer(layer);
+            proposalGroup.addLayer(layer);
+          }
+          attachLayerEvents(layer);
+        }
+      });
+      suppressHistory = false;
+      updateAnalysis();
+      updateSelectionHighlight();
+    }
+
+    function updateHistoryButtons() {
+      document.getElementById('undo-btn').disabled = historyIndex <= 0;
+      document.getElementById('redo-btn').disabled = historyIndex >= history.length - 1 || historyIndex === -1;
+    }
+
+    document.getElementById('undo-btn').addEventListener('click', () => {
+      if (historyIndex <= 0) return;
+      historyIndex -= 1;
+      loadState(history[historyIndex]);
+      clearSelection();
+      updateHistoryButtons();
+    });
+
+    document.getElementById('redo-btn').addEventListener('click', () => {
+      if (historyIndex >= history.length - 1) return;
+      historyIndex += 1;
+      loadState(history[historyIndex]);
+      clearSelection();
+      updateHistoryButtons();
+    });
+
+    document.getElementById('export-geojson').addEventListener('click', () => {
+      const geojson = proposalGroup.toGeoJSON();
+      geojson.features = geojson.features.filter(f => f.properties?.category === 'land' || f.properties?.category === 'road');
+      const dataStr = 'data:application/json;charset=utf-8,' + encodeURIComponent(JSON.stringify(geojson));
+      const link = document.createElement('a');
+      link.href = dataStr;
+      link.download = 'make-your-mark.geojson';
+      link.click();
+    });
+
+    document.getElementById('export-csv').addEventListener('click', () => {
+      const rows = [['Type', 'Area (ha)', 'Dwellings']];
+      landGroup.eachLayer(layer => {
+        const subtype = layer.feature?.properties?.subtype;
+        if (!subtype) return;
+        const areaHa = turf.area(layer.toGeoJSON()) / 10000;
+        let dwellings = '';
+        if (subtype.startsWith('residential')) {
+          const dph = densitySettings[subtype] || 0;
+          dwellings = Math.round(areaHa * dph);
+        }
+        rows.push([landUseTypes[subtype].label, formatNumber(areaHa), dwellings.toString()]);
+      });
+      rows.push(['Total area', formatNumber(latestTotals.areaHa), Math.round(latestTotals.dwellings).toLocaleString()]);
+      const csvContent = rows.map(row => row.join(',')).join('\n');
+      const link = document.createElement('a');
+      link.href = 'data:text/csv;charset=utf-8,' + encodeURIComponent(csvContent);
+      link.download = 'make-your-mark-analysis.csv';
+      link.click();
+    });
+
+    function handleGeoJSONFile(file, callback) {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        try {
+          const data = JSON.parse(e.target.result);
+          callback(data);
+        } catch (err) {
+          alert('Unable to parse GeoJSON file.');
+        }
+      };
+      reader.readAsText(file);
+    }
+
+    document.getElementById('import-geojson').addEventListener('change', (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+      handleGeoJSONFile(file, (data) => {
+        suppressHistory = true;
+        landGroup.clearLayers();
+        roadGroup.clearLayers();
+        proposalGroup.clearLayers();
+        L.geoJSON(data, {
+          onEachFeature: (feature, layer) => {
+            const { category, subtype, radii } = feature.properties || {};
+            if (category === 'land' && landUseTypes[subtype]) {
+              styleLandLayer(layer, subtype);
+              layer.feature = feature;
+              landGroup.addLayer(layer);
+              proposalGroup.addLayer(layer);
+            }
+            if (category === 'road' && roadTypes[subtype]) {
+              styleRoadLayer(layer, subtype, radii);
+              layer.feature = feature;
+              layer._roadRadii = radii || 'none';
+              layer._controlLatLngs = cloneLatLngs(layer.getLatLngs());
+              applyRoadSmoothing(layer);
+              roadGroup.addLayer(layer);
+              proposalGroup.addLayer(layer);
+            }
+            attachLayerEvents(layer);
+          }
+        });
+        suppressHistory = false;
+        clearSelection();
+        updateAnalysis();
+        if (proposalGroup.getLayers().length && proposalGroup.getBounds().isValid()) {
+          map.fitBounds(proposalGroup.getBounds(), { padding: [30, 30] });
+        }
+        showAlert('✅ Import successful — zoomed to data.');
+        saveHistory();
+      });
+      e.target.value = '';
+    });
+
+    document.getElementById('import-boundary').addEventListener('change', (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+      handleGeoJSONFile(file, (data) => {
+        boundaryGroup.clearLayers();
+        L.geoJSON(data, {
+          style: {
+            color: '#D32F2F',
+            weight: 2,
+            fillOpacity: 0
+          },
+          onEachFeature: (feature, layer) => {
+            layer.feature = feature;
+            layer.feature.properties = layer.feature.properties || {};
+            layer.feature.properties.category = 'boundary';
+            layer.on('click', (evt) => {
+              L.DomEvent.stopPropagation(evt);
+              setSelectedLayer(layer);
+            });
+          }
+        }).addTo(boundaryGroup);
+        clearSelection();
+        updateSelectionHighlight();
+        if (boundaryGroup.getLayers().length) {
+          map.fitBounds(boundaryGroup.getBounds(), { padding: [30, 30] });
+        }
+        showAlert('✅ Site boundary imported — zoomed to boundary.');
+      });
+      e.target.value = '';
+    });
+
+    map.on('layeradd', () => updateHistoryButtons());
+
+    function initializeHistory() {
+      saveHistory();
+    }
+
+    initializeHistory();
+    updateAnalysis();
+  </script>
+</body>
+</html>
